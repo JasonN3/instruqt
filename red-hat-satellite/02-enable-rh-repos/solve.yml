@@ -1,0 +1,34 @@
+#!/usr/bin/env ansible-playbook
+
+- hosts: localhost
+  vars:
+    recommended_repos:
+    - rhel-9-for-x86_64-baseos-rpms
+    - rhel-9-for-x86_64-appstream-rpms
+    - rhel-9-for-x86_64-baseos-kickstart
+    - rhel-9-for-x86_64-appstream-kickstart
+    - satellite-client-6-for-rhel-9-x86_64-rpms
+
+  pre_tasks:
+  - name: Get credentials
+    ansible.builtin.include_vars:
+      file: /etc/foreman-installer/scenarios.d/satellite-answers.yaml
+
+  tasks:
+  - name: Get Repository Set info
+    with_items: "{{ recommended_repos }}"
+    theforeman.foreman.resource_info:
+      username: "{{ foreman.initial_admin_username }}"
+      password: "{{ foreman.initial_admin_password }}"
+      server_url: "https://localhost"
+      validate_certs: false
+      resource: repository_sets
+      organization: "{{ foreman.initial_organization }}"
+      search: label="{{ item }}"
+    register: data
+
+  - name: Enable repos
+    ansible.builtin.include_tasks: "enable_repos.yml"
+    loop: "{{ data.results }}"
+    loop_control:
+      loop_var: result

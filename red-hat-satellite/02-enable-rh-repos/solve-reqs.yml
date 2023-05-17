@@ -1,0 +1,9 @@
+#!/usr/bin/env ansible-playbook
+
+- hosts: localhost
+  pre_tasks:
+  - name: Install galaxy collections
+    ansible.builtin.command: ansible-galaxy collection install theforeman.foreman community.general
+
+  - name: Install required packages
+    ansible.builtin.command: "{{ ansible_playbook_python }} -m pip install jmespath"
